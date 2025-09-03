@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Finder</title>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Location Finder</h1>
+        <div class="input-area">
+            <input type="text" id="task-input" placeholder="Enter a city (pune,mumbai,delhi)...">
+            <button id="search-btn">Search</button>
+        </div>
+        <div class="image-container">
+            <h1>Search for a place</h1>
+        </div>  
+    </div>
+    <script>
+        const searchBtn = document.getElementById('search-btn');
+        const taskInput = document.getElementById('task-input');
+        const imageContainer = document.querySelector('.image-container');
+
+       
+        const locations = {
+            'pune': {
+                title: 'Shaniwar Wada',
+                imageUrl: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/44/78/57/shaniwarwada.jpg?w=800&h=500&s=1'
+            },
+            'mumbai': {
+                title: 'Gateway of India',
+                imageUrl: 'https://www.himalayan-dreams.com/media/k2/items/cache/0e09527b0f5edaa60cf5702119e6a0a2_XL.jpg'
+            },
+            'delhi': {
+                title: 'India Gate',
+                imageUrl: 'https://s7ap1.scene7.com/is/image/incredibleindia/india-gate-delhi-1-attr-hero?qlt=82&ts=1742159856441'
+            }
+        };
+
+        function handler(){
+            const place = taskInput.value.trim().toLowerCase();
+            const locationData = locations[place];
+            if(locationData){
+                imageContainer.innerHTML = `
+                    <h1>${locationData.title}</h1>
+                    <img src="${locationData.imageUrl}" alt="${locationData.title}">
+                `;
+            }
+            else {
+                imageContainer.innerHTML = `<h1>Place not found</h1>`;
+            }
+        }
+
+        searchBtn.addEventListener('click', handler);
+        taskInput.addEventListener('keypress', function(event) {
+            if (event.key === 'A') {
+                handler();
+            }
+        });
+    </script>
+</body>
+</html>
