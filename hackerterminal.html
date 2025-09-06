@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hacker Terminal</title>
+<style>
+    body {
+        background-color: #000;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ff00;
+    }
+    .terminal {
+        width: 700px;
+        max-width: 90%;
+        background-color: #111;
+        border-radius: 5px;
+        box-shadow: 0 0 20px #0f0;
+        overflow: hidden;
+    }
+    .terminal-header {
+        background-color: #222;
+        padding: 0.5rem;
+        display: flex;
+        gap: 8px;
+    }
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .red { background-color: #ff5f56; }
+    .yellow { background-color: #ffbd2e; }
+    .green { background-color: #27c93f; }
+    .terminal-body {
+        padding: 1rem;
+        background-color: #000;
+        color: #00ff00;
+        font-size: 1rem;
+        white-space: pre-wrap;
+    }
+    .prompt { color: #0f0; }
+</style>
+</head>
+<body>
+<div class="terminal">
+    <div class="terminal-header">
+        <span class="red dot"></span>
+        <span class="yellow dot"></span>
+        <span class="green dot"></span>
+    </div>
+    <div class="terminal-body">
+        <pre>
+<span id="prompt1">user@root: <span id="msg1"></span><span id="dots1"></span></span>
+<span id="prompt2">user@root: <span id="msg2"></span><span id="dots2"></span></span>
+<span id="prompt3">user@root: <span id="msg3"></span><span id="dots3"></span></span>
+<span id="prompt4">user@root: <span id="msg4"></span><span id="dots4"></span></span>
+        </pre>
+    </div>
+</div>
+
+<script>
+const arr = ["red","yellow","green"];
+const msgs = [
+    document.getElementById('msg1'),
+    document.getElementById('msg2'),
+    document.getElementById('msg3'),
+    document.getElementById('msg4')
+];
+const dots = [
+    document.getElementById('dots1'),
+    document.getElementById('dots2'),
+    document.getElementById('dots3'),
+    document.getElementById('dots4')
+];
+const texts = [
+    "Accessing your files",
+    "Cracking passwords",
+    "Sending data to server for breaching",
+    "Removing digital footprints"
+];
+
+// Dot animation (infinite)
+function dot(ele){
+    let i = 0;
+    let interval = setInterval(() => {
+        ele.innerHTML += `<span style="color:${arr[i]}">.</span>`;
+        i++;
+        if(i==3){
+            clearInterval(interval);
+            setTimeout(() => {
+                ele.innerHTML = "";
+                dot(ele);
+            }, 500);
+        }
+    }, 500);
+}
+
+
+function typeText(ele, text, callback){
+    let i = 0;
+    let typing = setInterval(() => {
+        ele.textContent += text[i];
+        i++;
+        if(i >= text.length){
+            clearInterval(typing);
+            if(callback) callback();
+        }
+    }, 100);
+}
+
+
+function terminal(){
+    let index = 0;
+    function nextLine(){
+        if(index >= texts.length) return;
+        typeText(msgs[index], texts[index], () => {
+            dot(dots[index]); 
+            index++;
+            setTimeout(nextLine, 1000); 
+        });
+    }
+    nextLine();
+}
+
+terminal();
+</script>
+</body>
+</html>
