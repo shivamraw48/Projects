@@ -2,60 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Finder</title>
-    
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: linear-gradient(to right, #6dd5ed, #2193b0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .weather-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        #city-input {
+            width: 250px;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #get-weather-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: #2193b0;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #weather-display.hidden {
+            display: none;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Location Finder</h1>
-        <div class="input-area">
-            <input type="text" id="task-input" placeholder="Enter a city (pune,mumbai,delhi)...">
-            <button id="search-btn">Search</button>
+    <div class="weather-container">
+        <h1>Weather App</h1>
+        <div class="input-container">
+            <input type="text" id="city-input" placeholder="Enter city name...">
+            <button id="get-weather-btn">Get Weather</button>
         </div>
-        <div class="image-container">
-            <h1>Search for a place</h1>
-        </div>  
+        <div id="weather-display" class="hidden">
+            <h2 id="city-name"></h2>
+            <p id="temperature"></p>
+            <p id="description"></p>
+            <p id="humidity"></p>
+        </div>
+        <p id="error-message"></p>
     </div>
+
     <script>
-        const searchBtn = document.getElementById('search-btn');
-        const taskInput = document.getElementById('task-input');
-        const imageContainer = document.querySelector('.image-container');
+        const apikey = "fdc367dabd06e149a0201e1834acd0e1";
 
-       
-        const locations = {
-            'pune': {
-                title: 'Shaniwar Wada',
-                imageUrl: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/44/78/57/shaniwarwada.jpg?w=800&h=500&s=1'
-            },
-            'mumbai': {
-                title: 'Gateway of India',
-                imageUrl: 'https://www.himalayan-dreams.com/media/k2/items/cache/0e09527b0f5edaa60cf5702119e6a0a2_XL.jpg'
-            },
-            'delhi': {
-                title: 'India Gate',
-                imageUrl: 'https://s7ap1.scene7.com/is/image/incredibleindia/india-gate-delhi-1-attr-hero?qlt=82&ts=1742159856441'
-            }
-        };
+        const input = document.getElementById('city-input');
+        const errorMessage = document.getElementById('error-message');
+        const weatherDisplay = document.getElementById('weather-display');
 
-        function handler(){
-            const place = taskInput.value.trim().toLowerCase();
-            const locationData = locations[place];
-            if(locationData){
-                imageContainer.innerHTML = `
-                    <h1>${locationData.title}</h1>
-                    <img src="${locationData.imageUrl}" alt="${locationData.title}">
-                `;
-            }
-            else {
-                imageContainer.innerHTML = `<h1>Place not found</h1>`;
+        const btn = document.getElementById('get-weather-btn');
+        const cityname = document.getElementById('city-name');
+        const temp = document.getElementById('temperature');
+        const des = document.getElementById('description');
+        const hum = document.getElementById('humidity');
+
+        async function handler() {
+            try {
+                const city = input.value.trim().toLowerCase();
+                if (!city) {
+                    errorMessage.textContent = 'Please enter a city name.';
+                    weatherDisplay.classList.add('hidden');
+                    return;
+                }
+
+                const api = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apikey}&units=metric`;
+                const response = await fetch(api);
+                const data = await response.json();
+
+                if (response.ok) {
+                    cityname.textContent = `City: ${data.name}`;
+                    temp.textContent = `Temp: ${data.main.temp} °C`;
+                    hum.textContent = `Humidity: ${data.main.humidity}%`;
+                    des.textContent = `Description: ${data.weather[0].description}`;
+                    input.value = '';
+                    errorMessage.textContent = '';
+                    weatherDisplay.classList.remove('hidden');
+                } else {
+                    errorMessage.textContent = data.message;
+                    weatherDisplay.classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error while fetching data:', error);
+                errorMessage.textContent = 'An error occurred. Please try again later.';
+                weatherDisplay.classList.add('hidden');
             }
         }
 
-        searchBtn.addEventListener('click', handler);
-        taskInput.addEventListener('keypress', function(event) {
-            if (event.key === 'A') {
+        btn.addEventListener('click', handler);
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
                 handler();
             }
         });
