@@ -50,13 +50,13 @@
             console.log("Attempting to sign in anonymously...");
             signInAnonymously(auth).catch(error => {
                 console.error("Anonymous sign-in failed:", error);
-                alert(`Firebase Sign-In Failed: ${error.message}`);
+                showToast(`Firebase Sign-In Failed: ${error.message}`, false);
                 generateBtnForAuth.textContent = 'Auth Failed';
             });
 
         } catch (e) {
             console.error("Firebase initialization failed:", e);
-            alert(`Firebase Initialization Failed: ${e.message}`);
+            showToast(`Firebase Initialization Failed: ${e.message}`, false);
             const generateBtnForAuth = document.getElementById('generate-btn');
             generateBtnForAuth.textContent = 'Connection Failed';
         }
@@ -65,23 +65,22 @@
             if (!db || !userId) {
                 const errorMessage = "Cannot save record. Firebase services are not ready.";
                 console.error(errorMessage);
-                alert(errorMessage);
+                showToast(errorMessage, false);
                 return;
             }
             try {
-                alert("Attempting to save your compressed image record...");
+                const fullImageDataURI = `data:${mimeType};base64,${imageData}`;
                 const collectionPath = `/artifacts/${firebaseConfig.appId}/users/${userId}/uploads`;
                 await addDoc(collection(db, collectionPath), {
-                    imageData: imageData, // The compressed base64 image string
-                    mimeType: mimeType,
+                    imageDataURI: fullImageDataURI, // Store the full Data URI for easy viewing
                     prompt: promptText,
                     timestamp: serverTimestamp() 
                 });
                 console.log("Record saved successfully!");
-                alert("Success! Your image record has been saved.");
+                showToast("Success! Your image record has been saved.");
             } catch (error) {
                 console.error("CRITICAL ERROR saving record:", error);
-                alert(`Failed to save record to Firestore. Error: ${error.message}`);
+                showToast(`Failed to save record to Firestore. Error: ${error.message}`, false);
             }
         };
 
@@ -140,9 +139,55 @@
             object-fit: contain;
             border-radius: 0.5rem;
         }
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slide-in 0.3s forwards, slide-out 0.3s forwards 3s;
+        }
+        .toast-success {
+            background-color: #28a745;
+        }
+        .toast-error {
+            background-color: #dc3545;
+        }
+        @keyframes slide-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slide-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen py-10">
+    
+    <div id="toast-container"></div>
 
     <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-4xl mx-4">
         <div class="text-center mb-8">
@@ -214,10 +259,26 @@
         const outputImage = document.getElementById('output-image');
         const errorMessage = document.getElementById('error-message');
         const downloadBtn = document.getElementById('download-btn');
+        const toastContainer = document.getElementById('toast-container');
 
         let imageBase64 = null;
         let imageMimeType = null;
         
+        // --- New Toast Notification Function ---
+        function showToast(message, isSuccess = true) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.className = isSuccess ? 'toast toast-success' : 'toast toast-error';
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3300); // Remove after animation
+        }
+        
+        window.onload = () => {
+             promptInput.value = `Using the nano-banana model, create a 1/7 scale commercialized figurine of the characters in the picture in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is the brush modeling process of this figurine. Packaging box printed with the original art, The packaging features two-dimensional flat illustrations. Please turn this photo into a figure. Behind it, there should be a Model packaging box with the character from this photo printed on it. In front of the box on a round plastic baseplate the figure version of the photo I gave you. I'd like the PVC material to be clearly represented. It would be even better if the background is indoors.`;
+        };
+
         imageUpload.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -245,7 +306,7 @@
 
             } catch (error) {
               console.error('Image compression error:', error);
-              alert('Could not process the image. Please try a different one.');
+              showToast('Could not process the image. Please try another.', false);
             }
         });
 
@@ -253,7 +314,6 @@
             let attempt = 0;
             while (attempt < maxRetries) {
                 try {
-                    // This is your Google AI API key, not the Firebase key.
                     const apiKey = "AIzaSyCfdoqeKs_siMlWWZShKruV_I_qGB3-wFI"; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
                     
@@ -284,11 +344,11 @@
             const prompt = promptInput.value.trim();
 
             if (!imageBase64) {
-                alert('Please upload an image first.');
+                showToast('Please upload an image first.', false);
                 return;
             }
             if (!prompt) {
-                alert('Please enter a prompt.');
+                showToast('Please enter a prompt.', false);
                 return;
             }
             
