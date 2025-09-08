@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BY SHIVAM</title>
+    <title>Image-to-Image Generation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -182,7 +182,8 @@
             let attempt = 0;
             while (attempt < maxRetries) {
                 try {
-                    const apiKey = ""; // Canvas will provide the key
+                    // PASTE YOUR API KEY HERE
+                    const apiKey = "AIzaSyCfdoqeKs_siMlWWZShKruV_I_qGB3-wFI"; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
                     
                     const response = await fetch(apiUrl, {
@@ -280,3 +281,4 @@
     </script>
 </body>
 </html>
+
