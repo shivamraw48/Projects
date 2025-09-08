@@ -77,7 +77,6 @@
                     timestamp: serverTimestamp() 
                 });
                 console.log("Record saved successfully!");
-                showToast("Success! Your image record has been saved.");
             } catch (error) {
                 console.error("CRITICAL ERROR saving record:", error);
                 showToast(`Failed to save record to Firestore. Error: ${error.message}`, false);
