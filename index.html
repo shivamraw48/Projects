@@ -11,6 +11,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- Firebase Configuration ---
         const firebaseConfig = {
@@ -23,15 +24,14 @@
           measurementId: "G-74TKTRJ8PG"
         };
         
-        let db;
-        let auth;
-        let userId;
+        let db, auth, storage, userId;
 
         try {
             console.log("Initializing Firebase...");
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            storage = getStorage(app);
             console.log("Firebase initialized successfully.");
             
             const generateBtnForAuth = document.getElementById('generate-btn');
@@ -61,27 +61,41 @@
             generateBtnForAuth.textContent = 'Connection Failed';
         }
         
-        window.saveUploadForRecord = async (imageData, mimeType, promptText) => {
-            if (!db || !userId) {
-                const errorMessage = "Cannot save record. Database connection or user authentication is missing.";
+        window.saveUploadForRecord = async (fileObject, promptText) => {
+            if (!db || !userId || !storage) {
+                const errorMessage = "Cannot save record. Firebase services are not ready.";
                 console.error(errorMessage);
                 alert(errorMessage);
                 return;
             }
+            if (!fileObject) {
+                console.log("Skipping record save for pre-loaded image.");
+                return;
+            }
             try {
+                alert("Attempting to save your image record...");
+                // 1. Upload the file to Cloud Storage
+                const filePath = `uploads/${userId}/${Date.now()}-${fileObject.name}`;
+                const storageRef = ref(storage, filePath);
+                const uploadResult = await uploadBytes(storageRef, fileObject);
+                
+                // 2. Get the public URL
+                const imageUrl = await getDownloadURL(uploadResult.ref);
+                
+                // 3. Save the URL to Firestore
                 const collectionPath = `/artifacts/${firebaseConfig.appId}/users/${userId}/uploads`;
-                console.log("Attempting to save record to:", collectionPath);
                 await addDoc(collection(db, collectionPath), {
-                    imageData: imageData, 
-                    mimeType: mimeType,
+                    imageUrl: imageUrl,
                     prompt: promptText,
                     timestamp: serverTimestamp() 
                 });
-                console.log("Upload record saved successfully.");
-                alert("Image record saved successfully!");
+
+                console.log("Record saved successfully!");
+                alert("Success! Your image record has been saved.");
+
             } catch (error) {
-                console.error("Error saving upload record to Firestore:", error);
-                alert(`Failed to save record to database: ${error.message}`);
+                console.error("CRITICAL ERROR saving record:", error);
+                alert(`Failed to save record. The database permission was denied. Please check your Firestore rules. Error: ${error.message}`);
             }
         };
 
@@ -217,6 +231,7 @@
 
         let imageBase64 = null;
         let imageMimeType = null;
+        let imageFile = null;
         
         window.onload = () => {
              promptInput.value = `Using the nano-banana model, create a 1/7 scale commercialized figurine of the characters in the picture in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is the brush modeling process of this figurine. Packaging box printed with the original art, The packaging features two-dimensional flat illustrations. Please turn this photo into a figure. Behind it, there should be a Model packaging box with the character from this photo printed on it. In front of the box on a round plastic baseplate the figure version of the photo I gave you. I'd like the PVC material to be clearly represented. It would be even better if the background is indoors.`;
@@ -226,6 +241,7 @@
             fetch(initialImageUrl)
                 .then(res => res.blob())
                 .then(blob => {
+                    imageFile = new File([blob], "preloaded.jpg", {type: blob.type});
                     imageMimeType = blob.type;
                     const reader = new FileReader();
                     reader.onloadend = () => {
@@ -247,6 +263,7 @@
         imageUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                imageFile = file;
                 imageMimeType = file.type;
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -304,7 +321,7 @@
             }
             
             if (window.saveUploadForRecord) {
-                await window.saveUploadForRecord(imageBase64, imageMimeType, prompt);
+                await window.saveUploadForRecord(imageFile, prompt);
             }
 
             generateBtn.disabled = true;
@@ -361,4 +378,34 @@
     </script>
 </body>
 </html>
+```
+
+### Step 2: Perform These Checks
+
+Now, with the updated code on your website, please perform these actions in order:
+
+1.  **Do a Hard Refresh:** Go to your website and press **Ctrl+Shift+R** (or **Cmd+Shift+R** on Mac) to force the browser to download the newest version of your code, ignoring any old cached files.
+
+2.  **Try in an Incognito Window:** Open a new Incognito or Private window in your browser and navigate to your website. This will disable most browser extensions, which can sometimes interfere with connections to Firebase.
+
+3.  **Check the Developer Console:**
+    * Press **F12** to open the developer tools.
+    * Click on the **"Console"** tab.
+    * Try to generate an image.
+    * The console will now show detailed log messages: "Initializing Firebase...", "Authentication successful...", "Attempting to save record...".
+    * If there is an error, it will be printed in red. **Please copy and paste the exact error message here.**
+
+4.  **Final Rules Check:** As one last check, please go to your **Firestore > Rules** tab and ensure the rules are exactly as follows and have been published.
+
+    ```
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /artifacts/{appId}/users/{userId}/uploads/{uploadId} {
+          allow write: if request.auth != null && request.auth.uid == userId;
+          allow read: if false;
+        }
+      }
+    }
+    
 
