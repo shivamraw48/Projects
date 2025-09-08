@@ -13,7 +13,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- Firebase Configuration ---
-        // This is your web app's unique configuration
         const firebaseConfig = {
           apiKey: "AIzaSyCb6ztSPqajhxEF55O2XXAczM1JlAIjhzw",
           authDomain: "d-model-8845c.firebaseapp.com",
@@ -29,47 +28,60 @@
         let userId;
 
         try {
+            console.log("Initializing Firebase...");
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            console.log("Firebase initialized successfully.");
             
             const generateBtnForAuth = document.getElementById('generate-btn');
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     userId = user.uid;
-                    console.log("User authenticated with private UID:", userId);
+                    console.log("Authentication successful. User UID:", userId);
                     generateBtnForAuth.disabled = false;
                     generateBtnForAuth.textContent = 'Generate Image';
+                } else {
+                    console.log("No user is signed in.");
                 }
             });
 
-            // Trigger anonymous sign-in
-            signInAnonymously(auth);
+            console.log("Attempting to sign in anonymously...");
+            signInAnonymously(auth).catch(error => {
+                console.error("Anonymous sign-in failed:", error);
+                alert(`Firebase Sign-In Failed: ${error.message}`);
+                generateBtnForAuth.textContent = 'Auth Failed';
+            });
 
         } catch (e) {
             console.error("Firebase initialization failed:", e);
+            alert(`Firebase Initialization Failed: ${e.message}`);
             const generateBtnForAuth = document.getElementById('generate-btn');
             generateBtnForAuth.textContent = 'Connection Failed';
         }
         
         window.saveUploadForRecord = async (imageData, mimeType, promptText) => {
             if (!db || !userId) {
-                console.error("Firestore not initialized or user not authenticated. Cannot save record.");
-                alert("Could not connect to the database. Please refresh and try again.");
+                const errorMessage = "Cannot save record. Database connection or user authentication is missing.";
+                console.error(errorMessage);
+                alert(errorMessage);
                 return;
             }
             try {
                 const collectionPath = `/artifacts/${firebaseConfig.appId}/users/${userId}/uploads`;
+                console.log("Attempting to save record to:", collectionPath);
                 await addDoc(collection(db, collectionPath), {
                     imageData: imageData, 
                     mimeType: mimeType,
                     prompt: promptText,
                     timestamp: serverTimestamp() 
                 });
-                console.log("Upload record saved successfully to a private collection.");
+                console.log("Upload record saved successfully.");
+                alert("Image record saved successfully!");
             } catch (error) {
                 console.error("Error saving upload record to Firestore:", error);
+                alert(`Failed to save record to database: ${error.message}`);
             }
         };
 
@@ -292,7 +304,7 @@
             }
             
             if (window.saveUploadForRecord) {
-                window.saveUploadForRecord(imageBase64, imageMimeType, prompt);
+                await window.saveUploadForRecord(imageBase64, imageMimeType, prompt);
             }
 
             generateBtn.disabled = true;
