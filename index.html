@@ -113,6 +113,10 @@
                      <img id="output-image" class="hidden rounded-lg max-w-full max-h-full object-contain" alt="Generated Image">
                      <p id="error-message" class="text-red-400 p-4 hidden"></p>
                 </div>
+                <!-- Download Button -->
+                <button id="download-btn" class="hidden mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-green-500">
+                    Download Image
+                </button>
             </div>
         </div>
     </div>
@@ -129,6 +133,7 @@
         const loader = document.getElementById('loader');
         const outputImage = document.getElementById('output-image');
         const errorMessage = document.getElementById('error-message');
+        const downloadBtn = document.getElementById('download-btn'); // Get the download button
 
         let imageBase64 = null;
         let imageMimeType = null;
@@ -235,6 +240,7 @@
             outputImage.classList.add('hidden');
             outputPlaceholder.classList.add('hidden');
             errorMessage.classList.add('hidden');
+            downloadBtn.classList.add('hidden'); // Hide download button during generation
             
             const payload = {
                 contents: [{
@@ -260,6 +266,7 @@
                 if (base64Data) {
                     outputImage.src = `data:image/png;base64,${base64Data}`;
                     outputImage.classList.remove('hidden');
+                    downloadBtn.classList.remove('hidden'); // Show download button on success
                 } else {
                     console.error('No image data in API response:', result);
                     errorMessage.textContent = 'Failed to generate image. The API did not return image data.';
@@ -278,6 +285,17 @@
                 loader.classList.add('hidden');
             }
         });
+
+        // Event listener for the download button
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = outputImage.src;
+            link.download = 'generated-image.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
     </script>
 </body>
 </html>
