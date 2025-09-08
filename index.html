@@ -10,13 +10,20 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- Firebase Configuration ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
+        // This is your web app's unique configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyCb6ztSPqajhxEF55O2XXAczM1JlAIjhzw",
+          authDomain: "d-model-8845c.firebaseapp.com",
+          projectId: "d-model-8845c",
+          storageBucket: "d-model-8845c.appspot.com",
+          messagingSenderId: "839819219902",
+          appId: "1:839819219902:web:414ea21f9e255b89f51fef",
+          measurementId: "G-74TKTRJ8PG"
+        };
+        
         let db;
         let auth;
         let userId;
@@ -32,18 +39,13 @@
                 if (user) {
                     userId = user.uid;
                     console.log("User authenticated with private UID:", userId);
-                    // Enable the button now that we have a user ID
                     generateBtnForAuth.disabled = false;
                     generateBtnForAuth.textContent = 'Generate Image';
                 }
             });
 
-            // Trigger the sign-in process
-            if (initialAuthToken) {
-                await signInWithCustomToken(auth, initialAuthToken);
-            } else {
-                await signInAnonymously(auth);
-            }
+            // Trigger anonymous sign-in
+            signInAnonymously(auth);
 
         } catch (e) {
             console.error("Firebase initialization failed:", e);
@@ -51,7 +53,6 @@
             generateBtnForAuth.textContent = 'Connection Failed';
         }
         
-        // --- Function to Save Uploads to a PRIVATE Collection ---
         window.saveUploadForRecord = async (imageData, mimeType, promptText) => {
             if (!db || !userId) {
                 console.error("Firestore not initialized or user not authenticated. Cannot save record.");
@@ -59,8 +60,7 @@
                 return;
             }
             try {
-                // This path saves data under a unique ID for each user.
-                const collectionPath = `/artifacts/${appId}/users/${userId}/uploads`;
+                const collectionPath = `/artifacts/${firebaseConfig.appId}/users/${userId}/uploads`;
                 await addDoc(collection(db, collectionPath), {
                     imageData: imageData, 
                     mimeType: mimeType,
@@ -349,3 +349,4 @@
     </script>
 </body>
 </html>
+
