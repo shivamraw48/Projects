@@ -40,7 +40,7 @@
                 return;
             }
             try {
-                showToast("Attempting to save your image record...");
+                
                 
                 const filePath = `public/uploads/${Date.now()}-${fileObject.name}`;
                 const { data: uploadData, error: uploadError } = await supabaseClient
@@ -65,7 +65,7 @@
                 if (insertError) throw insertError;
 
                 console.log("Record saved successfully!");
-                showToast("Success! Your image record has been saved.");
+                
 
             } catch (error) {
                 console.error("CRITICAL ERROR saving record:", error);
