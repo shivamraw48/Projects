@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Image Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-200 flex flex-col items-center justify-center min-h-screen p-6">
+
+    <div class="bg-gray-700 p-8 rounded-xl shadow-2xl w-full max-w-2xl text-center">
+        <h1 class="text-3xl font-bold text-white mb-4">Admin Image Viewer</h1>
+        <p class="text-gray-400 mb-6">Paste the `imageDataURI` from your Firebase record to view the image.</p>
+
+        <textarea id="data-uri-input" rows="6" class="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Paste your imageDataURI string here..."></textarea>
+        
+        <button id="view-btn" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+            View Image
+        </button>
+    </div>
+
+    <div id="image-output-container" class="mt-8 bg-gray-700 p-4 rounded-xl shadow-2xl w-full max-w-2xl text-center hidden">
+        <h2 class="text-xl font-semibold text-white mb-4">Displayed Image:</h2>
+        <img id="displayed-image" src="" alt="Decoded Image" class="max-w-full max-h-96 mx-auto rounded-lg">
+    </div>
+
+    <script>
+        const viewBtn = document.getElementById('view-btn');
+        const dataUriInput = document.getElementById('data-uri-input');
+        const imageOutputContainer = document.getElementById('image-output-container');
+        const displayedImage = document.getElementById('displayed-image');
+
+        function displayImage() {
+            const dataURI = dataUriInput.value.trim();
+            if (dataURI) {
+                displayedImage.src = dataURI;
+                imageOutputContainer.classList.remove('hidden');
+            } else {
+                imageOutputContainer.classList.add('hidden');
+            }
+        }
+
+        viewBtn.addEventListener('click', displayImage);
+
+       
+        dataUriInput.addEventListener('input', displayImage);
+    </script>
+
+</body>
+</html>
